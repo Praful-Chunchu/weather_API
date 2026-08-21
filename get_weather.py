@@ -1,10 +1,33 @@
 import requests
 import os
 from dotenv import load_dotenv
+import streamlit as st
 
 # Load your API key from .env file
 load_dotenv()
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
+UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
+
+def get_city_image(city):
+    """
+    Fetch Image of the City, the user has inputed.
+    """
+    url = "https://api.unsplash.com/photos/random"
+
+    params = {
+        "query": city,
+        "client_id": UNSPLASH_ACCESS_KEY,
+        "orientation": "landscape"
+    }
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        return data["urls"]["regular"], data["user"]["name"]
+    return None, None
+
+
+
+
 def get_weather(city):
     """
     Fetch weather for the given city and print it nicely.
@@ -37,9 +60,20 @@ def get_weather(city):
     description = data["weather"][0]["description"]
     
     # 6. Print
-    print(f"In {city_name}, it is {temp_celsius}°C and a humidity of {humidity} with {description}.")
+    st.write(f"In {city_name}, it is {temp_celsius}°C and a humidity of {humidity} with {description}.")
 
 # Try it
 
-cityName = str(input("Enter the city name: "))
-get_weather(cityName)
+
+
+# 1. Title and description
+st.title("Weather In Any City!")
+cityName = st.text_input("Enter any City and We'll fetch you the weather!")
+
+if cityName:
+    get_weather(cityName)
+    image_url, photographer = get_city_image(cityName)
+    if image_url:
+        st.image(image_url, caption=f"{cityName} — Photo by {photographer} on Unsplash")
+
+
